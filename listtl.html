@@ -1,0 +1,145 @@
+<html>
+
+    <!-- JQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <!-- 
+        References to Semantic UI
+        For documentation please refer to https://semantic-ui.com/
+    -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
+
+    <!-- 
+        References to Tabulator
+        For documentation please refer to https://tabulator.info/docs/5.3
+    -->
+    <link href="./node_modules/tabulator-tables/dist/css/tabulator.min.css" rel="stylesheet">
+    <script type="text/javascript" src="./node_modules/tabulator-tables/dist/js/tabulator.min.js"></script>
+    
+    <!--Script-->
+    <script type="text/javascript" src="listtl.js"></script>
+<head>
+    <h1 style="padding-left:20px; padding-top:5px;">CoolMikeHatsune22's List of Translations</h1>
+    <div style="padding-left:20px; padding-bottom:5px;">
+        <div class="ui mini breadcrumb">
+            <i class="home icon"></i>
+            <a class="section" href="https://coolmikehatsune22.wordpress.com/">Home</a>
+            <div class="divider"> >> </div>
+            <i class="list icon"></i>
+            <a class="section">List of Translations</a>
+        </div>
+    </div>
+</head>
+<title>Vocaloid Music TL</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style>
+    .ui.grid.column {
+        vertical-align: middle;
+    }
+    .ui.grid.filtergroup>.column:not(.row) {
+        padding-top: 0.5em;
+        padding-bottom: 0.5em;
+    }
+    .ui.grid.maingrid {
+        padding-left: 2em;
+        padding-right: 2em;
+    }
+    p.caption {
+        margin-top: 0.452381em;
+        margin-bottom: 0.452381em;
+    }
+</style>
+<body>
+
+    <div class="ui styled fluid accordion">
+        
+            <table width="100%" style="padding-left:10px; padding-right:10px;">
+                <tr><td width="20%">
+                    <i class="search icon"></i>
+                    <b>Search page</b>
+                </td><td>
+                    <div class="ui fluid category search">
+                        <div class="ui fluid icon input">
+                        <input class="prompt" type="text" placeholder="Search for a song...">
+                        <i class="search icon"></i>
+                        </div>
+                        <div class="results"></div>
+                    </div>
+                </td></tr>
+            </table>
+
+        <div class="title">
+            <i class="dropdown icon"></i>
+            <i class="filter icon"></i>
+            Filters
+        </div>
+
+        <div class="content">
+            
+            <div class="ui stackable grid maingrid">
+                <div class="twelve wide column">
+                    <div class="ui two column grid filtergroup">
+                        <div class="four wide column"><p class="caption">Search for vocal synths:</p></div>
+                        <div class="twelve wide column">
+                            <div class="ui fluid scrolling multiple search dropdown icon" id="synthlist"></div>
+                        </div>
+                        <div class="four wide column"><p class="caption">Search for singers:</p></div>
+                        <div class="twelve wide column">
+                            <div class="ui fluid scrolling multiple search dropdown icon" id="singerlist"></div>
+                        </div>
+                        <div class="four wide column"><p class="caption">Search for producers:</p></div>
+                        <div class="twelve wide column">
+                            <div class="ui fluid scrolling multiple search dropdown icon" id="producerlist"></div>
+                        </div>
+                        <div class="four wide column"><p class="caption">Search for circles:</p></div>
+                        <div class="twelve wide column">
+                            <div class="ui fluid scrolling multiple search dropdown icon" id="circlelist"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="four wide column"><table style="padding:10px 10px 10px 10px;">
+                    <tr><td>
+                        <button id="clearfilter" class="ui fluid button" onclick="reset_filter();" style="background-color: darkgrey;">Clear all filters</button>
+                    </td></tr><tr><td>
+                        <br>
+                    </td></tr><tr><td>
+                        <button id="togglelocalize" class="ui fluid secondary button" onclick="toggleLanguage();">Show title & names in the original language script</button>
+                    </td></tr><tr><td>
+                        <br>
+                    </td></tr><tr><td>
+                        <div class="ui toggle checkbox">
+                            <input type="checkbox" id="sublink" onclick="toggle_subs();">
+                            <label id="sublink_label">Show English sub links</label>
+                        </div>
+                    </td></tr>
+                </table></div>
+
+            </div>
+        </div>     
+    </div>
+    <div class="ui tabular menu">
+        <div class="item active" data-tab="cntl" id="cntl-tab">Chinese-English TL</div>
+        <div class="item" data-tab="jptl" id="jptl-tab">Japanese-English TL</div>
+    </div>
+    <div style="text-align:right; padding: 2px 10px 5px;" id="sortchrono" onclick="sort_chronological();" value=false>Newest → Oldest</div>
+    <div class="ui tab" data-tab="cntl">
+        <div id="listcntl-table"></div>
+    </div>
+    <div class="ui tab" data-tab="jptl">
+        <div id="listjptl-table"></div>
+    </div>
+    <hr>
+    <script>
+        let clientwidth = window.innerWidth;
+        createtables();
+        $('.tabular.menu .item').tab({
+            //alwaysRefresh:true,
+            onLoad:function(e) {toggleTab(e);}
+        });
+        $.tab('change tab', 'cntl');
+        $('.ui.accordion').accordion();
+    </script>
+</body>
+</html>
