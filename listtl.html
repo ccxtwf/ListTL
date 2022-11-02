@@ -34,6 +34,7 @@
 </head>
 <title>Vocaloid Music TL</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
     .ui.grid.column {
         vertical-align: middle;
@@ -50,11 +51,16 @@
         margin-top: 0.452381em;
         margin-bottom: 0.452381em;
     }
+    .footer {
+        font-size: 8pt; 
+        vertical-align: top;
+    }
 </style>
 <body>
 
     <div class="ui styled fluid accordion">
         
+        <!--
             <table width="100%" style="padding-left:10px; padding-right:10px;">
                 <tr><td width="20%">
                     <i class="search icon"></i>
@@ -69,6 +75,7 @@
                     </div>
                 </td></tr>
             </table>
+        -->
 
         <div class="title">
             <i class="dropdown icon"></i>
@@ -131,7 +138,13 @@
     <div class="ui tab" data-tab="jptl">
         <div id="listjptl-table"></div>
     </div>
-    <hr>
+    <div class="ui divider"></div>
+    <table width=100% id="footer" style="padding-bottom:2em;">
+        <tr>
+            <td class="footer" style="text-align: left;">Powered by <a href="https://semantic-ui.com/" target="_blank" rel="noopener noreferrer">Semantic UI</a> and <a href="https://tabulator.info/" target="_blank" rel="noopener noreferrer">Tabulator</a>.</td>
+            <td class="footer" style="text-align: right;">This page is still under construction.</td>
+        </tr>
+    </table>
     <script>
         let clientwidth = window.innerWidth;
         createtables();
