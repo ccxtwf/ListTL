@@ -11,8 +11,8 @@
     <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
 
     <!-- 
-        References to Tabulator
-        For documentation please refer to https://tabulator.info/docs/5.3
+        References to Tabulator (USED v5.4)
+        For documentation please refer to https://tabulator.info/docs/5.4
     -->
     <link href="https://unpkg.com/tabulator-tables/dist/css/tabulator.min.css" rel="stylesheet">
     <script type="text/javascript" src="https://unpkg.com/tabulator-tables/dist/js/tabulator.min.js"></script>
@@ -58,25 +58,23 @@
 </style>
 <body>
 
+    <table width="100%" style="padding-left:10px; padding-right:10px;">
+        <tr><td width="20%">
+            <i class="search icon"></i>
+            <b>Search page</b>
+        </td><td>
+            <div class="ui fluid category search" id="titlesearch">
+                <div class="ui fluid icon input">
+                <input class="prompt" type="text" placeholder="Search for a song...">
+                <i class="search icon"></i>
+                </div>
+                <div class="results"></div>
+            </div>
+        </td></tr>
+    </table>
+
     <div class="ui styled fluid accordion">
         
-        <!--
-            <table width="100%" style="padding-left:10px; padding-right:10px;">
-                <tr><td width="20%">
-                    <i class="search icon"></i>
-                    <b>Search page</b>
-                </td><td>
-                    <div class="ui fluid category search">
-                        <div class="ui fluid icon input">
-                        <input class="prompt" type="text" placeholder="Search for a song...">
-                        <i class="search icon"></i>
-                        </div>
-                        <div class="results"></div>
-                    </div>
-                </td></tr>
-            </table>
-        -->
-
         <div class="title">
             <i class="dropdown icon"></i>
             <i class="filter icon"></i>
@@ -118,7 +116,7 @@
                         <br>
                     </td></tr><tr><td>
                         <div class="ui toggle checkbox">
-                            <input type="checkbox" id="sublink" onclick="toggle_subs();">
+                            <input type="checkbox" id="sublink" onclick="toggleSubs();">
                             <label id="sublink_label">Show English sub links</label>
                         </div>
                     </td></tr>
@@ -134,9 +132,11 @@
     <div style="text-align:right; padding: 2px 10px 5px;" id="sortchrono" onclick="sort_chronological();" value=false>Newest → Oldest</div>
     <div class="ui tab" data-tab="cntl">
         <div id="listcntl-table"></div>
+        <div id="listcntl-loader" class="ui active text loader">Loading</div>
     </div>
     <div class="ui tab" data-tab="jptl">
         <div id="listjptl-table"></div>
+        <div id="listjptl-loader" class="ui active text loader">Loading</div>
     </div>
     <div class="ui divider"></div>
     <table width=100% id="footer" style="padding-bottom:2em;">
@@ -150,7 +150,15 @@
         createtables();
         $('.tabular.menu .item').tab({
             //alwaysRefresh:true,
-            onLoad:function(e) {toggleTab(e);}
+            onLoad:function(e) {
+                $("#listcntl-loader").toggleClass("active");
+                $("#listjptl-loader").toggleClass("active");
+                setTimeout(function(){
+                    toggleTab(e);
+                    $("#listcntl-loader").toggleClass("active");
+                    $("#listjptl-loader").toggleClass("active");
+                }, 10);
+            }
         });
         $.tab('change tab', 'cntl');
         $('.ui.accordion').accordion();

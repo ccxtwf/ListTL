@@ -3,7 +3,18 @@
 let listOfJapaneseTL;
 let listOfChineseTL;
 
+//let githuburl = "https://ccxtwf.github.io/ListTL/";
+let filejplisttl = "listofjapanesetl.json";
+let filecnlisttl = "listofchinesetl.json";
+
 let arr_filterdropdown = ["synthlist", "singerlist", "producerlist", "circlelist"];
+
+let list_regex = {
+    "YouTube": new RegExp(/^https?:\/\/www\.youtube\.com\/watch\?v=.*/),
+    "Nekocap": new RegExp(/^https?:\/\/nekocap\.com\/view\/.*/),
+    "Vocaloid Lyrics Wiki": new RegExp(/^https?:\/\/vocaloidlyrics\.fandom\.com\/wiki\/.*/),
+    "Wordpress": new RegExp(/^https?:\/\/coolmikehatsune22\.wordpress\.com\/.*/)
+};
 
 /* Represent Tabulator elements
 */
@@ -24,17 +35,19 @@ let mode_ActiveTable = "cntl";
 /* Load Json to table
 */
 async function loadJSon() {
-    //fetch("listofjapanesetl.json")
-    await fetch("listofjapanesetl.json")
+    //console.log("Fetching...");
+    await fetch(filejplisttl)
         .then(response => {
             return response.json();
         })
         .then(data => {
+            //console.log("Imported Japanese list");
             listOfJapaneseTL = data;
             //console.log(data);
         });
-    await fetch("listofchinesetl.json")
+    await fetch(filecnlisttl)
         .then(response => {
+            //console.log("Imported Chinese list");
             return response.json();
         })
         .then(data => {
@@ -68,7 +81,7 @@ function toggleLanguage() {
                 table.showColumn(item + "_loc");
             });
         }
-        table.redraw();
+        table.redraw();list_contributors
         
         isTableDisplayedInEnglish = !isTableDisplayedInEnglish;
         if (isTableDisplayedInEnglish) {
@@ -155,6 +168,7 @@ function loadalldropdown(datacontainer, mode_ActiveTable, bool_uselocalizedname)
     arr_circles_sorted = datacontainer[3][1].sort(function(a, b){
         return b.count - a.count;
     });
+    arr_titles = datacontainer[4];
 
     function loadsingledrowpdown(dropdownelement, plcmessage, arrData, bool_uselocalizedname) {
         let strHTML = "";
@@ -202,7 +216,7 @@ function loadalldropdown(datacontainer, mode_ActiveTable, bool_uselocalizedname)
             Object.keys(data_filter).forEach( key => {
                 data_filter[key].data = data_filter[key].value.split(",");
             });
-            console.log(data_filter);
+            //console.log(data_filter);
             
             bFilterSet = (data_filter.synth.value !== "" || data_filter.singer.value !== "" ||data_filter.producer.value !== "" || data_filter.circle.value !== "");
 
@@ -251,9 +265,32 @@ function loadalldropdown(datacontainer, mode_ActiveTable, bool_uselocalizedname)
         });
     });
 
+    //console.log(arr_titles);
+    $("#titlesearch").search({source: arr_titles, fullTextSearch: false, 
+        onSelect:function(result, response) {
+            //Event listener triggered when a search item is selected
+            let qtitle = result.title;
+            let activetable = data_table[mode_ActiveTable];
+            activetable.setFilter(
+                function(data, filterParams){
+                    return data.originaltitle == qtitle || data.romanizedtitle == qtitle || data.englishtitle == qtitle;
+                }, {}
+            );
+        }
+    });
+    $("#titlesearch").on("change", function(){
+        let value = $("#titlesearch").search("get value");
+        if (value.trim() == "") {
+            //Event listener triggered when the search item string is removed (deselected)
+            //console.log("DESELECTED:");
+            let activetable = data_table[mode_ActiveTable];
+            activetable.clearFilter();
+        }
+    });
+
 }
 
-function toggle_subs() {
+function toggleSubs() {
     let is_ToggledOn = document.getElementById("sublink").checked;
     Object.keys(data_table).forEach( key => {
         table = data_table[key];
@@ -278,6 +315,7 @@ function reset_filter() {
         $('#sortchrono').val(false); 
         $('#sortchrono').html("Newest → Oldest");
         $('#clearfilter').toggleClass("loading");
+        $('#titlesearch').search("set value", "");
     }, 10);
 }
 
@@ -372,26 +410,33 @@ async function createtables() {
         };
         let func_mutator_ogtitle_dispog = function(value, data){
             let [orgtitle, romtitle, pageurl] = [data.originaltitle, data.romanizedtitle, data.pageurl];
-            let title = "<a href=\"" + pageurl + "\" target=\"_blank\">" + orgtitle + "</a>";
+            let site = determineSite(pageurl);
+            site = site == "" ? "" : "Go to " + site;
+            let title = "<a href=\"" + pageurl + "\" target=\"_blank\" title=\"" + site + "\">" + orgtitle + "</a>";
             if (romtitle !== orgtitle) {title += " (" + romtitle + ")";}
             return title
         };
         
         let func_mutator_engtitle_dispeng = function(value, data){
             let [engtitle, pageurl] = [data.englishtitle, data.pageurl];
-            let title = "<a href=\"" + pageurl + "\" target=\"_blank\">" + engtitle + "</a>";
+            let site = determineSite(pageurl);
+            site = site == "" ? "" : "Go to " + site;
+            let title = "<a href=\"" + pageurl + "\" target=\"_blank\" title=\"" + site + "\">" + engtitle + "</a>";
             return title
         };
         let func_mutator_engtitle_dispog = function(value, data){
             return data.englishtitle
         };
     
-        let table = new Tabulator("#" + nametable, {
+        let table = new Tabulator("#" + nametable + "-table", {
             data:jsondata,
+            //Cannot load AJAX data due to CORS policy
+            //ajaxURL:urljsondata, 
+            //ajaxProgressiveLoad:"load", 
     
             //layout:"fitData",
             layout:"fitColumns",
-            tooltips:false, 
+            //tooltips:false, 
     
             pagination:"local",
             paginationSize:50,
@@ -520,33 +565,23 @@ async function createtables() {
                     formatter:func_formatlistwrap
                 },
                 {title:"Year", field:"year", sorter:"number", hozAlign:"left", vertAlign:"middle", width:80, resizable:true},
-                {title:"Subbed", field:"suburl", hozAlign:"left", vertAlign:"middle", width:200, resizable:true, visible:false,
+                {title:"Subbed", field:"suburl", hozAlign:"center", vertAlign:"middle", width:120, resizable:true, visible:false,
                     mutator:function(value, data) {
                         if (value.length == 0) {return ""};
                         let str_sublink = "";
-                        let list_regex = {
-                            "YouTube": new RegExp(/https?:\/\/www\.youtube\.com\/watch\?v=.*/),
-                            "Nekocap": new RegExp(/https?:\/\/nekocap\.com\/view\/.*/)
-                        }
                         let [url, site] = ["", ""]; 
                         value.forEach( item => {
                             arr_split = item.split("|");
                             switch (arr_split.length) {
                                 case 1:
                                     url = item;
-                                    site = "";
-                                    Object.keys(list_regex).forEach( key => {
-                                        if (url.match(list_regex[key])) {site = key};
-                                    })
-                                    str_sublink += "<a href=\"" + url + "\" target=\"_blank\">[" + site + "]</a>\n";
+                                    site = determineSite(url);
+                                    str_sublink += "<a href=\"" + url + "\" target=\"_blank\" title='View subs'>[" + site + "]</a>\n";
                                     break;
                                 case 2:
                                     url = arr_split[1];
-                                    site = "";
-                                    Object.keys(list_regex).forEach( key => {
-                                        if (url.match(list_regex[key])) {site = key};
-                                    })
-                                    str_sublink += "<a href=\"" + url + "\" target=\"_blank\">[" + site + "] <sub>(" + arr_split[0] + ")</sub></a>\n";
+                                    site = determineSite(url);
+                                    str_sublink += "<a href=\"" + url + "\" target=\"_blank\" title='" + arr_split[0] + "'>[" + site + "]</a>\n";
                                     break;
                                 default:
                                     console.error("Invalid input for subbed video links");
@@ -573,6 +608,8 @@ async function createtables() {
                 sort_chronological();
             }
         });
+
+        table.on("tableBuilt", function(){$("#" + nametable + "-loader").toggleClass("active");});
     
         isTableDisplayedInEnglish = true;
     
@@ -586,13 +623,13 @@ async function createtables() {
         cn:[],
         jp:[],
     }
-    list_contributors.cn = getListOfSynthAndProducer(listOfChineseTL);
-    list_contributors.jp = getListOfSynthAndProducer(listOfJapaneseTL);
+    list_contributors.cn = getListOfInfo(listOfChineseTL);
+    list_contributors.jp = getListOfInfo(listOfJapaneseTL);
 
     loadalldropdown(list_contributors, "cntl", true);
 
-    data_table["cntl"] = createTable(listOfChineseTL, "listcntl-table");
-    data_table["jptl"] = createTable(listOfJapaneseTL, "listjptl-table");
+    data_table["cntl"] = createTable(listOfChineseTL, "listcntl");
+    data_table["jptl"] = createTable(listOfJapaneseTL, "listjptl");
 }
 
 function sort_chronological() {
@@ -607,13 +644,13 @@ function sort_chronological() {
 /* Get list of synths, producers and circles
    Returns a 3x2 array.
 */
-function getListOfSynthAndProducer(jsondata) {
-    //arr_jsondata = [listOfChineseTL, listOfJapaneseTL];
+function getListOfInfo(jsondata) {
 
     [arr_synths_keys, arr_synths] = [[], []];
     [arr_vocalists_keys, arr_vocalists] = [[], []];
     [arr_producers_keys, arr_producers] = [[], []];
     [arr_circles_keys, arr_circles] = [[], []];
+    arr_titles = [];
 
     jsondata.forEach(record => {
         //Iterate through synths
@@ -696,14 +733,33 @@ function getListOfSynthAndProducer(jsondata) {
                 arr_circles.push(writerecord);
             }
         };
+        //Add title data
+        let orgtitle = record.originaltitle;
+        let romtitle = record.romanizedtitle;
+        let engtitle = record.englishtitle;
+        arr_titles.push({title:orgtitle});
+        if (romtitle !== orgtitle) {arr_titles.push({title:romtitle});};
+        if (engtitle !== orgtitle) {arr_titles.push({title:engtitle});};
+
     });
+
+    //console.log(arr_titles);
 
     return [
         [arr_synths_keys, arr_synths],
         [arr_vocalists_keys, arr_vocalists],
         [arr_producers_keys, arr_producers],
-        [arr_circles_keys, arr_circles]
+        [arr_circles_keys, arr_circles],
+        arr_titles
     ];
+}
+
+function determineSite(url) {
+    let site = "";
+    Object.keys(list_regex).forEach( key => {
+        if (url.match(list_regex[key])) {site = key};
+    });
+    return site;
 }
 
 /* Summarize data from JSon 
