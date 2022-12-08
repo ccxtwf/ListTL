@@ -4,8 +4,8 @@ let listOfJapaneseTL;
 let listOfChineseTL;
 
 //let githuburl = "https://ccxtwf.github.io/ListTL/";
-let filejplisttl = "listofjapanesetl.json";
-let filecnlisttl = "listofchinesetl.json";
+let filejplisttl = "listjptl.json";
+let filecnlisttl = "listcntl.json";
 
 let arr_filterdropdown = ["synthlist", "singerlist", "producerlist", "circlelist"];
 
@@ -60,29 +60,55 @@ function toggleLanguage() {
 
     $("#togglelocalize").toggleClass("loading");
 
-    table = data_table[mode_ActiveTable];
-    let arr_toggle_columns = ["engtitle", "title", "vocals", "circle", "producer"];
-    let arr_alwaysshow_columns = ["id", "year"];
-
+    
     setTimeout(function(){
         
-        arr_alwaysshow_columns.forEach( (item) => {
-            table.showColumn(item);
-        })
-        if (isTableDisplayedInEnglish) {
-            arr_toggle_columns.forEach( (item) => {
-                table.hideColumn(item + "_loc");
-                table.showColumn(item);
-            });    
-        }
-        else {
-            arr_toggle_columns.forEach( (item) => {
-                table.hideColumn(item);
-                table.showColumn(item + "_loc");
+        //Redraw table
+        Object.keys(data_table).forEach( table_key => {
+            table = data_table[table_key];
+            table.updateColumnDefinition("title_1", {
+                formatterParams:{
+                    bool_displaylatin:!isTableDisplayedInEnglish,
+                    bool_showurl:true
+                },
+                sorterParams:{
+                    alignEmptyValues:"bottom",
+                    comparefield:isTableDisplayedInEnglish ? "romtitle" : "engtitle"
+                },
+                title:isTableDisplayedInEnglish ? "Original Title" : "English Title"
             });
-        }
-        table.redraw();list_contributors
+            table.updateColumnDefinition("title_2", {
+                formatterParams:{
+                    bool_displaylatin:isTableDisplayedInEnglish,
+                    bool_showurl:false
+                },
+                sorterParams:{
+                    alignEmptyValues:"bottom",
+                    comparefield:isTableDisplayedInEnglish ? "engtitle" : "romtitle"
+                },
+                title:isTableDisplayedInEnglish ? "English Title" : "Original Title"
+            });
+            table.updateColumnDefinition("vocals", {
+                formatterParams:{
+                    bool_showlatin:!isTableDisplayedInEnglish,
+                    bool_displayroles:false
+                }
+            });
+            table.updateColumnDefinition("producers", {
+                formatterParams:{
+                    bool_showlatin:!isTableDisplayedInEnglish,
+                    bool_displayroles:true
+                }
+            });
+            table.updateColumnDefinition("circles", {
+                formatterParams:{
+                    bool_showlatin:!isTableDisplayedInEnglish,
+                    bool_displayroles:false
+                }
+            });
+        })
         
+        //Other DOM elements
         isTableDisplayedInEnglish = !isTableDisplayedInEnglish;
         if (isTableDisplayedInEnglish) {
             loadalldropdown(list_contributors, mode_ActiveTable, true);
@@ -99,47 +125,12 @@ function toggleLanguage() {
 };
 
 function toggleTab(input_mode_ActiveTable) {
-
-    function redrawTable(table) {
-        let arr_toggle_columns = ["engtitle", "title", "vocals", "circle", "producer"];
-        let arr_alwaysshow_columns = ["id", "year"];
-        /*
-        console.log("LOG:");
-        table.getColumns().forEach( column => {
-            console.log(column.getField());
-            column.hide();
-        })
-        */
-        arr_alwaysshow_columns.forEach( (item) => {
-            table.showColumn(item);
-            //console.log("Showed: " + table.getColumn(item).getField());
-        })
-        if (isTableDisplayedInEnglish) {
-            arr_toggle_columns.forEach( item => {
-                table.hideColumn(item);
-                table.showColumn(item + "_loc");
-                //console.log("Hid: " + table.getColumn(item).getField());
-                //console.log("Showed: " + table.getColumn(item + "_loc").getField());
-            });    
-        }
-        else {
-            arr_toggle_columns.forEach( item => {
-                table.hideColumn(item + "_loc");
-                table.showColumn(item);
-                //console.log("Hid: " + table.getColumn(item + "_loc").getField());
-                //console.log("Showed: " + table.getColumn(item).getField());
-            });
-        }
+    if (mode_ActiveTable !== input_mode_ActiveTable) {
+        table = data_table[input_mode_ActiveTable];
         table.clearFilter();
         arr_filterdropdown.forEach(item => {
             $("#" + item).dropdown("restore defaults");
         });
-        //table.redraw();
-    }
-
-    if (mode_ActiveTable !== input_mode_ActiveTable) {
-        redrawTable(data_table[input_mode_ActiveTable]);
-        //console.log("Redrawn " + input_mode_ActiveTable);
     };
     mode_ActiveTable = input_mode_ActiveTable;
     loadalldropdown(list_contributors, mode_ActiveTable, isTableDisplayedInEnglish);
@@ -199,17 +190,17 @@ function loadalldropdown(datacontainer, mode_ActiveTable, bool_uselocalizedname)
                 },
                 singer: {
                     value: $("#singerlist").dropdown('get value'),
-                    filterfield: "vocalists",
+                    filterfield: "singers",
                     data: []
                 },
                 producer: {
                     value: $("#producerlist").dropdown('get value'),
-                    filterfield: "producer",
+                    filterfield: "producers",
                     data: []
                 },
                 circle: {
                     value: $("#circlelist").dropdown('get value'),
-                    filterfield: "circle",
+                    filterfield: "circles",
                     data: []
                 }
             };
@@ -233,7 +224,7 @@ function loadalldropdown(datacontainer, mode_ActiveTable, bool_uselocalizedname)
                             filterField = arr_filterField[i];
                             filterByString.forEach ( item => {
                                 if (item !== "") {
-                                    bool_foundstr = bool_foundstr && data[filterField].includes(item);
+                                    bool_foundstr = bool_foundstr && data[filterField].map( record => {return record.orig}).includes(item);
                                 };
                             });
                         };
@@ -265,16 +256,34 @@ function loadalldropdown(datacontainer, mode_ActiveTable, bool_uselocalizedname)
         });
     });
 
-    //console.log(arr_titles);
+    func_search_title_filter = function(data, filterParams){
+        qtitle = filterParams.qtitle;
+        //console.log(qtitle);
+        bool_exact_match_found = data.title.orig == qtitle || data.title.rom == qtitle || data.title.eng == qtitle;
+        if (bool_exact_match_found) {return bool_exact_match_found;};
+        str_regex_partial_match = qtitle.replace(/\b(the|a|an)\b\s?/gi, "").trim();
+        if (str_regex_partial_match == "") {str_regex_partial_match = qtitle};
+        arr_find_match = str_regex_partial_match.split(" ");
+        bool_partial_match_found = true;
+        arr_find_match.forEach( item => {
+            item = item.trim();
+            item = "\\b" + item.replace(/[\.\+\*\?\^\$\(\)\[\]\{\}\\]/, /\\\\\1/) + "\\b";
+            let regex_item = new RegExp(item, "i");
+            bool_partial_match_found = bool_partial_match_found && 
+                ( Array.isArray(data.title.orig.match(regex_item)) || 
+                Array.isArray(data.title.rom.match(regex_item)) || 
+                Array.isArray(data.title.eng.match(regex_item)) )
+        });
+        return bool_partial_match_found;
+    };
+
     $("#titlesearch").search({source: arr_titles, fullTextSearch: false, 
         onSelect:function(result, response) {
             //Event listener triggered when a search item is selected
             let qtitle = result.title;
             let activetable = data_table[mode_ActiveTable];
             activetable.setFilter(
-                function(data, filterParams){
-                    return data.originaltitle == qtitle || data.romanizedtitle == qtitle || data.englishtitle == qtitle;
-                }, {}
+                func_search_title_filter, {qtitle:qtitle}
             );
         }
     });
@@ -285,6 +294,14 @@ function loadalldropdown(datacontainer, mode_ActiveTable, bool_uselocalizedname)
             //console.log("DESELECTED:");
             let activetable = data_table[mode_ActiveTable];
             activetable.clearFilter();
+        }
+        else {
+            //Event listener triggered when a query is input into the search bar
+            let activetable = data_table[mode_ActiveTable];
+            console.log(value.trim());
+            activetable.setFilter(
+                func_search_title_filter, {qtitle:value.trim()}
+            );
         }
     });
 
@@ -299,7 +316,7 @@ function toggleSubs() {
         table.redraw();
     })
     document.getElementById("sublink_label").innerHTML = is_ToggledOn ? "Hide English sub links" : "Show English sub links";
-}
+};
 
 function reset_filter() {
     $('#clearfilter').toggleClass("loading");
@@ -317,11 +334,76 @@ function reset_filter() {
         $('#clearfilter').toggleClass("loading");
         $('#titlesearch').search("set value", "");
     }, 10);
-}
+};
 
 async function createtables() {
 
-    function createTable(jsondata, nametable) {
+    function createTable(urljsondata, nametable) {
+
+        let func_mutator_title = function(value, data) {
+            let [orgtitle, romtitle, engtitle, pageurl] = [data.title.orig, data.title.rom, data.title.eng, data.pageurl];
+            return {orgtitle:orgtitle, romtitle:romtitle, engtitle:engtitle, pageurl:pageurl};
+        };
+        
+        let func_formatter_title = function(cell, formatterParams, onRendered) {
+        
+            let func_wrap_ahref = function(pageurl, text) {
+                let site = determineSite(pageurl);
+                site = site == "" ? "" : "Go to " + site;
+                return "<a href=\"" + pageurl + "\" target=\"_blank\" title=\"" + site + "\">" + text + "</a>";
+            }
+        
+            let cellValue = cell.getValue();
+            let [orgtitle, romtitle, engtitle, pageurl] = [cellValue.orgtitle, cellValue.romtitle, cellValue.engtitle, cellValue.pageurl];
+            //console.log(orgtitle, romtitle, engtitle);
+            //console.log(bool_displaylatin);
+            let formatted_data = "";
+            if (formatterParams.bool_displaylatin) {
+                formatted_data = formatterParams.bool_showurl ? func_wrap_ahref(pageurl, engtitle) : engtitle;
+            }
+            else {
+                formatted_data = formatterParams.bool_showurl ? func_wrap_ahref(pageurl, orgtitle) : orgtitle;
+                if (orgtitle !== romtitle) {
+                    formatted_data += " (" + romtitle + ")";
+                }
+            }
+        
+            cell.getElement().style.whiteSpace = "pre-wrap";
+            function emptyToSpace(value) {
+                return value === null || typeof value === "undefined" || value === "" ? "&nbsp;" : value;
+            }
+            return emptyToSpace("<div>" + formatted_data + "</div>");
+            
+        };
+
+        let func_mutator_vocals = function(value, data){
+            let list_synths = data.synths;
+            let list_singers = data.singers;
+            show_list = list_synths.concat(list_singers);
+            return show_list;
+        };
+        
+        let func_formatter_credits = function(cell, formatterParams, onRendered) {
+                
+            //Get list of JSon items in cell
+            listincell = cell.getValue();
+            qryRecord = formatterParams.bool_showlatin ? "loc" : "orig";
+            formatted_list = listincell.map( item => {
+                query_item = item[qryRecord];
+                if (formatterParams.bool_displayroles) {
+                    str_role = item["roles"];
+                    query_item = "<span title=\"" + str_role + "\">" + query_item + "</span>";
+                }
+                return query_item;
+            });
+        
+            //Format HTML with word wrap
+            cell.getElement().style.whiteSpace = "pre-wrap";
+            function emptyToSpace(value) {
+                return value === null || typeof value === "undefined" || value === "" ? "&nbsp;" : value;
+            }
+            return emptyToSpace("<div>" + formatted_list.join(", ") + "</div>");
+        };
 
         let func_formathtmlwrap = function(cell, formatterParams, onRendered) {
             cell.getElement().style.whiteSpace = "pre-wrap";
@@ -329,32 +411,6 @@ async function createtables() {
                 return value === null || typeof value === "undefined" || value === "" ? "&nbsp;" : value;
             }
             return emptyToSpace("<div>" + cell.getValue() + "</div>");
-        }
-        let func_formatlistwrap = function(cell, formatterParams, onRendered) {
-            listincell = cell.getValue();
-            joinedlist = listincell.join(", ");
-            cell.getElement().style.whiteSpace = "pre-wrap";
-            function emptyToSpace(value) {
-                return value === null || typeof value === "undefined" || value === "" ? "&nbsp;" : value;
-            }
-            function sanitizeHTML(value) {
-                if (value) {
-                  var entityMap = {
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    '"': '&quot;',
-                    "'": '&#39;',
-                    '/': '&#x2F;',
-                    '`': '&#x60;',
-                    '=': '&#x3D;'
-                  };
-                  return String(value).replace(/[&<>"'`=/]/g, function (s) {
-                    return entityMap[s];
-                  });
-                } else { return value; }
-            }
-            return this.emptyToSpace(this.sanitizeHTML(joinedlist));
         }
     
         let func_sortstring = function(a, b, aRow, bRow, column, dir, params) {
@@ -365,8 +421,26 @@ async function createtables() {
             
             let aRowData = aRow.getData();
             let bRowData = bRow.getData();
-            a = aRowData[comparefield];
-            b = bRowData[comparefield];
+            switch(comparefield) {
+                case "romtitle":
+                    a = aRowData.title.rom;
+                    b = bRowData.title.rom;
+                    break;
+                case "engtitle":
+                    a = aRowData.title.eng;
+                    b = bRowData.title.eng;
+                    break;
+                case "vocals":
+                case "producers":
+                case "circles":
+                    a = aRowData[comparefield].map( item => {
+                        return item.loc;
+                    }).join(",")
+                    b = bRowData[comparefield].map( item => {
+                        return item.loc;
+                    }).join(",")
+                    break;
+            }
             if (typeof a !== "string" && Array.isArray(a)) {
                 a = a.join(", ");
             }
@@ -402,41 +476,18 @@ async function createtables() {
             return emptyAlign;
         };
     
-        let func_mutator_ogtitle_dispeng = function(value, data){
-            let [orgtitle, romtitle] = [data.originaltitle, data.romanizedtitle];
-            let title = orgtitle
-            if (romtitle !== orgtitle) {title += " (" + romtitle + ")";}
-            return title
-        };
-        let func_mutator_ogtitle_dispog = function(value, data){
-            let [orgtitle, romtitle, pageurl] = [data.originaltitle, data.romanizedtitle, data.pageurl];
-            let site = determineSite(pageurl);
-            site = site == "" ? "" : "Go to " + site;
-            let title = "<a href=\"" + pageurl + "\" target=\"_blank\" title=\"" + site + "\">" + orgtitle + "</a>";
-            if (romtitle !== orgtitle) {title += " (" + romtitle + ")";}
-            return title
-        };
-        
-        let func_mutator_engtitle_dispeng = function(value, data){
-            let [engtitle, pageurl] = [data.englishtitle, data.pageurl];
-            let site = determineSite(pageurl);
-            site = site == "" ? "" : "Go to " + site;
-            let title = "<a href=\"" + pageurl + "\" target=\"_blank\" title=\"" + site + "\">" + engtitle + "</a>";
-            return title
-        };
-        let func_mutator_engtitle_dispog = function(value, data){
-            return data.englishtitle
-        };
-    
+        bool_showlatin = true;
+
         let table = new Tabulator("#" + nametable + "-table", {
-            data:jsondata,
-            //Cannot load AJAX data due to CORS policy
-            //ajaxURL:urljsondata, 
-            //ajaxProgressiveLoad:"load", 
+            //data:jsondata,
+            ajaxURL:urljsondata, 
+            ajaxProgressiveLoad:"load", 
     
             //layout:"fitData",
             layout:"fitColumns",
             //tooltips:false, 
+            //Responsive layout doesn't work
+            //responsiveLayout:"hide",
     
             pagination:"local",
             paginationSize:50,
@@ -452,117 +503,68 @@ async function createtables() {
             },
             columns:[
                 {title:"No", field:"id", sorter:"number", hozAlign:"left", vertAlign:"middle", width:60},
-                {title:"Original Title", field:"title", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, visible:false, 
-                    mutator:func_mutator_ogtitle_dispog,
+                {title:"English Title", field:"title_1", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, 
+                    mutator:func_mutator_title,
+                    formatter:func_formatter_title,
+                    formatterParams:{
+                        bool_displaylatin:true,
+                        bool_showurl:true
+                    },
                     sorter:func_sortstring,
                     sorterParams:{
                         alignEmptyValues:"bottom",
-                        comparefield:"romanizedtitle"
+                        comparefield:"engtitle"
                     },
-                    formatter:func_formathtmlwrap
                 },
-                {title:"English Title", field:"engtitle", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, visible:false,
-                    mutator:func_mutator_engtitle_dispog,
+                {title:"Original Title", field:"title_2", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, 
+                    mutator:func_mutator_title,
+                    formatter:func_formatter_title,
+                    formatterParams:{
+                        bool_displaylatin:false,
+                        bool_showurl:false
+                    },
                     sorter:func_sortstring,
                     sorterParams:{
                         alignEmptyValues:"bottom",
-                        comparefield:"englishtitle"
+                        comparefield:"romtitle"
                     },
-                    formatter:func_formathtmlwrap
                 },
-                {title:"English Title", field:"engtitle_loc", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, 
-                    mutator:func_mutator_engtitle_dispeng,
+                {title:"Featuring Vocals", field:"vocals", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, 
+                    mutator:func_mutator_vocals,
+                    formatter:func_formatter_credits,
+                    formatterParams:{
+                        bool_showlatin:true,
+                        bool_displayroles:false
+                    },
                     sorter:func_sortstring,
                     sorterParams:{
                         alignEmptyValues:"bottom",
-                        comparefield:"englishtitle"
+                        comparefield:"vocals"
                     },
-                    formatter:func_formathtmlwrap
                 },
-                {title:"Original Title", field:"title_loc", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, 
-                    mutator:func_mutator_ogtitle_dispeng,
+                {title:"Producers", field:"producers", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, 
+                    formatter:func_formatter_credits,
+                    formatterParams:{
+                        bool_showlatin:true,
+                        bool_displayroles:true
+                    },
                     sorter:func_sortstring,
                     sorterParams:{
                         alignEmptyValues:"bottom",
-                        comparefield:"romanizedtitle"
+                        comparefield:"producers"
                     },
-                    formatter:func_formathtmlwrap
                 },
-                {title:"Featuring Vocals", field:"vocals", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, visible:false, 
-                    mutator:function(value, data){
-                        let vocals = [];
-                        ["synths", "vocalists"].forEach((item) => {
-                            vocals.push(...data[item]);
-                        });
-                        return vocals;
+                {title:"Circle", field:"circles", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true,
+                    formatter:func_formatter_credits,
+                    formatterParams:{
+                        bool_showlatin:true,
+                        bool_displayroles:false
                     },
                     sorter:func_sortstring,
                     sorterParams:{
                         alignEmptyValues:"bottom",
-                        comparefield:"vocals_loc"
+                        comparefield:"circles"
                     },
-                    formatter:func_formatlistwrap
-                },
-                {title:"Featuring Vocals", field:"vocals_loc", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, 
-                    mutator:function(value, data){
-                        let vocals = [];
-                        ["synths", "vocalists"].forEach((item) => {
-                            vocals.push(...data[item + "_loc"]);
-                        });
-                        return vocals;
-                    },
-                    sorter:func_sortstring,
-                    sorterParams:{
-                        alignEmptyValues:"bottom",
-                        comparefield:"vocals_loc"
-                    },
-                    formatter:func_formatlistwrap
-                },
-                {title:"Producers", field:"producer", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, visible:false, 
-                    mutator:function(value, data){
-                        let producer = new Set();
-                        ["composer", "lyricist", "tuner"].forEach((item) => {
-                            if (data[item].length) {producer.add(...data[item]);};
-                        });
-                        return [...producer];
-                    },
-                    sorter:func_sortstring,
-                    sorterParams:{
-                        alignEmptyValues:"bottom",
-                        comparefield:"producer"
-                    },
-                    formatter:func_formatlistwrap
-                },
-                {title:"Producers", field:"producer_loc", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, 
-                    mutator:function(value, data){
-                        let producer = new Set();
-                        ["composer", "lyricist", "tuner"].forEach((item) => {
-                            if (data[item + "_loc"].length) {producer.add(...data[item + "_loc"]);};
-                        });
-                        return [...producer];
-                    },
-                    sorter:func_sortstring,
-                    sorterParams:{
-                        alignEmptyValues:"bottom",
-                        comparefield:"producer_loc"
-                    },               
-                    formatter:func_formatlistwrap
-                },
-                {title:"Circle", field:"circle", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, visible:false, 
-                    sorter:func_sortstring,
-                    sorterParams:{
-                        alignEmptyValues:"bottom",
-                        comparefield:"circle"
-                    },
-                    formatter:func_formatlistwrap
-                },
-                {title:"Circle", field:"circle_loc", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, 
-                    sorter:func_sortstring,
-                    sorterParams:{
-                        alignEmptyValues:"bottom",
-                        comparefield:"circle_loc"
-                    },
-                    formatter:func_formatlistwrap
                 },
                 {title:"Year", field:"year", sorter:"number", hozAlign:"left", vertAlign:"middle", width:80, resizable:true},
                 {title:"Subbed", field:"suburl", hozAlign:"center", vertAlign:"middle", width:120, resizable:true, visible:false,
@@ -628,8 +630,8 @@ async function createtables() {
 
     loadalldropdown(list_contributors, "cntl", true);
 
-    data_table["cntl"] = createTable(listOfChineseTL, "listcntl");
-    data_table["jptl"] = createTable(listOfJapaneseTL, "listjptl");
+    data_table["cntl"] = createTable(filecnlisttl, "listcntl");
+    data_table["jptl"] = createTable(filejplisttl, "listjptl");
 }
 
 function sort_chronological() {
@@ -652,91 +654,45 @@ function getListOfInfo(jsondata) {
     [arr_circles_keys, arr_circles] = [[], []];
     arr_titles = [];
 
+    function write_info_data(arr_keys, arr_values, json_item) {
+        readdata = json_item.orig;
+        readdata_loc = json_item.loc;
+        if (arr_keys.includes(readdata)) {
+            index = arr_keys.indexOf(readdata);
+            arr_values[index].count++;
+        }
+        else {
+            writerecord = {};
+            writerecord.key = readdata;
+            writerecord.locname = readdata_loc;
+            writerecord.count = 1;
+            arr_keys.push(readdata);
+            arr_values.push(writerecord);
+        };
+        return [arr_keys, arr_values];
+    }
+
     jsondata.forEach(record => {
         //Iterate through synths
-        for (let i = 0; i < record.synths.length; i++) {
-            readsynth = record.synths[i];
-            readsynth_loc = record.synths_loc[i];
-            if (arr_synths_keys.includes(readsynth)) {
-                index = arr_synths_keys.indexOf(readsynth);
-                arr_synths[index].count++;
-            }
-            else {
-                writerecord = {};
-                writerecord.key = readsynth;
-                writerecord.locname = readsynth_loc;
-                writerecord.count = 1;
-                arr_synths_keys.push(readsynth);
-                arr_synths.push(writerecord);
-            }
-        };
+        record.synths.forEach( item => {
+            [arr_synths_keys, arr_synths] = write_info_data(arr_synths_keys, arr_synths, item);
+        })
         //Iterate through singers
-        for (let i = 0; i < record.vocalists.length; i++) {
-            readvoc = record.vocalists[i];
-            readvoc_loc = record.vocalists_loc[i];
-            if (arr_vocalists_keys.includes(readvoc)) {
-                index = arr_vocalists_keys.indexOf(readvoc);
-                arr_vocalists[index].count++;
-            }
-            else {
-                writerecord = {};
-                writerecord.key = readvoc;
-                writerecord.locname = readvoc_loc;
-                writerecord.count = 1;
-                arr_vocalists_keys.push(readvoc);
-                arr_vocalists.push(writerecord);
-            }
-        };
+        record.singers.forEach( item => {
+            [arr_vocalists_keys, arr_vocalists] = write_info_data(arr_vocalists_keys, arr_vocalists, item);
+        })
         //Iterate through singers, composers, lyricists, and tuners
-        let readproducers = [];
-        let readproducers_loc = [];
-        ["composer", "lyricist", "tuner"].forEach( item => {
-            readrecord = record[item];
-            readrecord_loc = record[item + "_loc"];
-            for (let i = 0; i < readrecord.length; i++) {
-                if (!readproducers.includes(readrecord[i])) {
-                    readproducers.push(readrecord[i]);
-                    readproducers_loc.push(readrecord_loc[i]);
-                };
-            };
-        });
-        for (let i = 0; i < readproducers.length; i++) {
-            readproducer = readproducers[i];
-            readproducer_loc = readproducers_loc[i];
-            if (arr_producers_keys.includes(readproducer)) {
-                index = arr_producers_keys.indexOf(readproducer);
-                arr_producers[index].count++;
-            }
-            else {
-                writerecord = {};
-                writerecord.key = readproducer;
-                writerecord.locname = readproducer_loc;
-                writerecord.count = 1;
-                arr_producers_keys.push(readproducer);
-                arr_producers.push(writerecord);
-            }
-        };
+        record.producers.forEach( item => {
+            [arr_producers_keys, arr_producers] = write_info_data(arr_producers_keys, arr_producers, item);
+        })
         //Iterate through circles
-        for (let i = 0; i < record.circle.length; i++) {
-            readcircle = record.circle[i];
-            readcircle_loc = record.circle_loc[i];
-            if (arr_circles_keys.includes(readcircle)) {
-                index = arr_circles_keys.indexOf(readcircle);
-                arr_circles[index].count++;
-            }
-            else {
-                writerecord = {};
-                writerecord.key = readcircle;
-                writerecord.locname = readcircle_loc;
-                writerecord.count = 1;
-                arr_circles_keys.push(readcircle);
-                arr_circles.push(writerecord);
-            }
-        };
+        record.circles.forEach( item => {
+            [arr_circles_keys, arr_circles] = write_info_data(arr_circles_keys, arr_circles, item);
+        })
         //Add title data
-        let orgtitle = record.originaltitle;
-        let romtitle = record.romanizedtitle;
-        let engtitle = record.englishtitle;
+        let orgtitle = record.title.orig;
+        let romtitle = record.title.rom;
+        let engtitle = record.title.eng;
         arr_titles.push({title:orgtitle});
         if (romtitle !== orgtitle) {arr_titles.push({title:romtitle});};
         if (engtitle !== orgtitle) {arr_titles.push({title:engtitle});};
@@ -773,14 +729,11 @@ async function summarizeAllData(modechecktable, bool_showcount) {
 
     let containerSongDetailsData = {
         "synths": new Map(),
-        "vocalists": new Map(),
-        "circle": new Map(),  
-        "composer": new Map(), 
-        "lyricist": new Map(), 
-        "tuner": new Map(),
-        "series": new Map()
+        "singers": new Map(),
+        "circles": new Map(),  
+        "producers": new Map()
     }
-    const arrLoopThroughFields = ["synths", "vocalists", "circle", "composer", "lyricist", "tuner", "series"];
+    const arrLoopThroughFields = Object.keys(containerSongDetailsData);
 
     await loadJSon();
 
@@ -797,10 +750,10 @@ async function summarizeAllData(modechecktable, bool_showcount) {
                 arrData = record[field];
                 if (Array.isArray(arrData) && arrData.length) {
                     arrData.forEach( item => {
-                        if (!mapField.has(item)) {mapField.set(item, 1);}
+                        if (!mapField.has(item.orig)) {mapField.set(item.orig, 1);}
                         else {
-                            count = mapField.get(item) + 1;
-                            mapField.set(item, count);
+                            count = mapField.get(item.orig) + 1;
+                            mapField.set(item.orig, count);
                         };
                     });
                 };
