@@ -1,3 +1,6 @@
+//Check if site is on mobile
+let isMobile = window.matchMedia('only screen and (max-width: 768px)').matches;
+
 /* Contain JSon data
 */
 let listOfJapaneseTL;
@@ -338,7 +341,7 @@ function reset_filter() {
 
 async function createtables() {
 
-    function createTable(urljsondata, nametable) {
+    function createTable(jsondata, nametable) {
 
         let func_mutator_title = function(value, data) {
             let [orgtitle, romtitle, engtitle, pageurl] = [data.title.orig, data.title.rom, data.title.eng, data.pageurl];
@@ -479,9 +482,9 @@ async function createtables() {
         bool_showlatin = true;
 
         let table = new Tabulator("#" + nametable + "-table", {
-            //data:jsondata,
-            ajaxURL:urljsondata, 
-            ajaxProgressiveLoad:"load", 
+            data:jsondata,
+            //ajaxURL:urljsondata, 
+            //ajaxProgressiveLoad:"scroll", 
     
             //layout:"fitData",
             layout:"fitColumns",
@@ -502,7 +505,7 @@ async function createtables() {
                 return definitions;
             },
             columns:[
-                {title:"No", field:"id", sorter:"number", hozAlign:"left", vertAlign:"middle", width:60},
+                {title:"No", field:"id", sorter:"number", hozAlign:"left", vertAlign:"middle", width:50, visible:!isMobile},
                 {title:"English Title", field:"title_1", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, 
                     mutator:func_mutator_title,
                     formatter:func_formatter_title,
@@ -517,6 +520,7 @@ async function createtables() {
                     },
                 },
                 {title:"Original Title", field:"title_2", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, 
+                    visible:!isMobile,
                     mutator:func_mutator_title,
                     formatter:func_formatter_title,
                     formatterParams:{
@@ -555,6 +559,7 @@ async function createtables() {
                     },
                 },
                 {title:"Circle", field:"circles", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true,
+                    visible:!isMobile,
                     formatter:func_formatter_credits,
                     formatterParams:{
                         bool_showlatin:true,
@@ -566,7 +571,7 @@ async function createtables() {
                         comparefield:"circles"
                     },
                 },
-                {title:"Year", field:"year", sorter:"number", hozAlign:"left", vertAlign:"middle", width:80, resizable:true},
+                {title:"Year", field:"year", sorter:"number", hozAlign:"left", vertAlign:"middle", width:60, resizable:true},
                 {title:"Subbed", field:"suburl", hozAlign:"center", vertAlign:"middle", width:120, resizable:true, visible:false,
                     mutator:function(value, data) {
                         if (value.length == 0) {return ""};
@@ -630,8 +635,10 @@ async function createtables() {
 
     loadalldropdown(list_contributors, "cntl", true);
 
-    data_table["cntl"] = createTable(filecnlisttl, "listcntl");
-    data_table["jptl"] = createTable(filejplisttl, "listjptl");
+    //data_table["cntl"] = createTable(filecnlisttl, "listcntl");
+    //data_table["jptl"] = createTable(filejplisttl, "listjptl");
+    data_table["cntl"] = createTable(listOfChineseTL, "listcntl");
+    data_table["jptl"] = createTable(listOfJapaneseTL, "listjptl");
 }
 
 function sort_chronological() {
