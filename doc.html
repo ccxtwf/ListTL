@@ -17,7 +17,6 @@
     <link href="https://unpkg.com/tabulator-tables/dist/css/tabulator.min.css" rel="stylesheet">
     <script type="text/javascript" src="https://unpkg.com/tabulator-tables/dist/js/tabulator.min.js"></script>
 
-    
     <!--Script-->
     <script type="text/javascript" src="listtl.js"></script>
 <head>
@@ -25,10 +24,10 @@
     <div style="padding-left:20px; padding-bottom:5px;">
         <div class="ui mini breadcrumb">
             <i class="home icon"></i>
-            <a class="section" href="https://coolmikehatsune22.wordpress.com/">Home</a>
+            <a class="section" href="https://coolmikehatsune22.wordpress.com/" title="Back to Wordpress">Home</a>
             <div class="divider"> >> </div>
             <i class="list icon"></i>
-            <a class="section">List of Translations</a>
+            <a class="section" style="cursor:default">List of Translations</a>
         </div>
     </div>
 </head>
@@ -54,6 +53,7 @@
     .footer {
         font-size: 8pt; 
         vertical-align: top;
+        cursor:default;
     }
     .sortbutton {
         color: #0f237e;
@@ -63,12 +63,56 @@
         color: #2185d0;
         cursor:pointer;
     }
+    p, span, div {
+        cursor:default;
+    }
+
+    /*
     .tabulator-loader {
         background-color: rgba(240, 248, 255, 0.5);
         opacity: 0.4;
         font-family: Lato,'Helvetica Neue',Arial,Helvetica,sans-serif;
         border-width: 3px;
     }
+    */
+
+    /*
+    Tabulator Styling
+    */
+    .tabulator .tabulator-header .tabulator-col.tabulator-sortable .tabulator-col-title {
+        padding-right: 20px;
+    }
+    .tabulator-col-content {
+        background-color: #647a5a;
+        color:#e6e5e0;
+    }
+    .tabulator .tabulator-tableholder .tabulator-table {
+        color:rgb(51, 46, 46);
+    }
+    .tabulator a {
+        color:rgb(51, 46, 46);
+        text-decoration: underline;
+    }
+    .tabulator-row.tabulator-selectable:hover {
+        background-color: #bdd396;
+        cursor: default;
+    }
+    .tabulator-row.tabulator-row-even {
+        background-color: #adcdbe5e;
+    }
+    .tabulator-row.tabulator-row-odd {
+        background-color: #ffffff00;
+    }
+    .tabulator .tabulator-footer {
+        background-color: #647a5a;
+        color: #e6e5e0;
+        border-top: 5px solid #544d4c;
+    }
+    .tabulator .tabulator-footer .tabulator-page.active {
+        background-color: #b4d5a57d;
+        color: #000000;
+    }
+
 </style>
 <body>
 
@@ -98,7 +142,7 @@
         <div class="content">
             
             <div class="ui stackable grid maingrid">
-                <div class="twelve wide column">
+                <div class="twelve wide column computer only">
                     <div class="ui two column grid filtergroup">
                         <div class="four wide column"><p class="caption">Search for vocal synths:</p></div>
                         <div class="twelve wide column">

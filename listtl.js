@@ -1,5 +1,5 @@
 //Check if site is on mobile
-let isMobile = window.matchMedia('only screen and (max-width: 768px)').matches;
+//let isMobile = window.matchMedia('only screen and (max-width: 768px)').matches;
 
 /* Contain JSon data
 */
@@ -63,7 +63,6 @@ function toggleLanguage() {
 
     $("#togglelocalize").toggleClass("loading");
 
-    
     setTimeout(function(){
         
         //Redraw table
@@ -490,7 +489,7 @@ async function createtables() {
             layout:"fitColumns",
             //tooltips:false, 
             //Responsive layout doesn't work
-            //responsiveLayout:"hide",
+            responsiveLayout:true,
     
             pagination:"local",
             paginationSize:50,
@@ -505,8 +504,14 @@ async function createtables() {
                 return definitions;
             },
             columns:[
-                {title:"No", field:"id", sorter:"number", hozAlign:"left", vertAlign:"middle", width:50, visible:!isMobile},
+                {title:"No", field:"id", sorter:"number", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, 
+                    width:50,
+                    responsive:1,
+                    minWidth:50},
                 {title:"English Title", field:"title_1", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, 
+                    //width:200,
+                    responsive:0,
+                    minWidth:150,                    
                     mutator:func_mutator_title,
                     formatter:func_formatter_title,
                     formatterParams:{
@@ -520,7 +525,9 @@ async function createtables() {
                     },
                 },
                 {title:"Original Title", field:"title_2", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, 
-                    visible:!isMobile,
+                    //width:200,
+                    responsive:5,
+                    minWidth:150,
                     mutator:func_mutator_title,
                     formatter:func_formatter_title,
                     formatterParams:{
@@ -534,6 +541,9 @@ async function createtables() {
                     },
                 },
                 {title:"Featuring Vocals", field:"vocals", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, 
+                    //width:200,
+                    responsive:0,
+                    minWidth:150,
                     mutator:func_mutator_vocals,
                     formatter:func_formatter_credits,
                     formatterParams:{
@@ -547,6 +557,9 @@ async function createtables() {
                     },
                 },
                 {title:"Producers", field:"producers", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, 
+                    //width:200,
+                    responsive:2,
+                    minWidth:150,
                     formatter:func_formatter_credits,
                     formatterParams:{
                         bool_showlatin:true,
@@ -558,8 +571,10 @@ async function createtables() {
                         comparefield:"producers"
                     },
                 },
-                {title:"Circle", field:"circles", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true,
-                    visible:!isMobile,
+                {title:"Circle", field:"circles", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, 
+                    //width:200,
+                    responsive:3,
+                    minWidth:150,
                     formatter:func_formatter_credits,
                     formatterParams:{
                         bool_showlatin:true,
@@ -571,8 +586,12 @@ async function createtables() {
                         comparefield:"circles"
                     },
                 },
-                {title:"Year", field:"year", sorter:"number", hozAlign:"left", vertAlign:"middle", width:60, resizable:true},
-                {title:"Subbed", field:"suburl", hozAlign:"center", vertAlign:"middle", width:120, resizable:true, visible:false,
+                {title:"Year", field:"year", sorter:"number", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, 
+                    width:60,  
+                    responsive:2,
+                    minWidth:60},
+                {title:"Subbed", field:"suburl", hozAlign:"center", vertAlign:"middle", width:120, resizable:true, variableHeight:true, 
+                    visible:false,
                     mutator:function(value, data) {
                         if (value.length == 0) {return ""};
                         let str_sublink = "";
