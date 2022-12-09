@@ -511,7 +511,7 @@ async function createtables() {
                 {title:"English Title", field:"title_1", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, 
                     //width:200,
                     responsive:0,
-                    minWidth:150,                    
+                    minWidth:100,                    
                     mutator:func_mutator_title,
                     formatter:func_formatter_title,
                     formatterParams:{
@@ -527,7 +527,7 @@ async function createtables() {
                 {title:"Original Title", field:"title_2", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, 
                     //width:200,
                     responsive:5,
-                    minWidth:150,
+                    minWidth:100,
                     mutator:func_mutator_title,
                     formatter:func_formatter_title,
                     formatterParams:{
@@ -540,10 +540,10 @@ async function createtables() {
                         comparefield:"romtitle"
                     },
                 },
-                {title:"Featuring Vocals", field:"vocals", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, 
+                {title:"Vocals", field:"vocals", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, 
                     //width:200,
                     responsive:0,
-                    minWidth:150,
+                    minWidth:100,
                     mutator:func_mutator_vocals,
                     formatter:func_formatter_credits,
                     formatterParams:{
@@ -559,7 +559,7 @@ async function createtables() {
                 {title:"Producers", field:"producers", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, 
                     //width:200,
                     responsive:2,
-                    minWidth:150,
+                    minWidth:100,
                     formatter:func_formatter_credits,
                     formatterParams:{
                         bool_showlatin:true,
@@ -573,8 +573,8 @@ async function createtables() {
                 },
                 {title:"Circle", field:"circles", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, 
                     //width:200,
-                    responsive:3,
-                    minWidth:150,
+                    responsive:4,
+                    minWidth:100,
                     formatter:func_formatter_credits,
                     formatterParams:{
                         bool_showlatin:true,
@@ -588,10 +588,13 @@ async function createtables() {
                 },
                 {title:"Year", field:"year", sorter:"number", hozAlign:"left", vertAlign:"middle", resizable:true, variableHeight:true, 
                     width:60,  
-                    responsive:2,
+                    responsive:3,
                     minWidth:60},
-                {title:"Subbed", field:"suburl", hozAlign:"center", vertAlign:"middle", width:120, resizable:true, variableHeight:true, 
+                {title:"Subbed", field:"suburl", hozAlign:"center", vertAlign:"middle", resizable:true, variableHeight:true, 
                     visible:false,
+                    width:100, 
+                    responsive:0,
+                    minWidth:60,
                     mutator:function(value, data) {
                         if (value.length == 0) {return ""};
                         let str_sublink = "";
