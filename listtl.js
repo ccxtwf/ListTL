@@ -39,7 +39,7 @@ let mode_ActiveTable = "cntl";
 */
 async function loadJSon() {
     //console.log("Fetching...");
-    await fetch(filejplisttl)
+    await fetch(filejplisttl, {cache: "no-store"})
         .then(response => {
             return response.json();
         })
@@ -48,7 +48,7 @@ async function loadJSon() {
             listOfJapaneseTL = data;
             //console.log(data);
         });
-    await fetch(filecnlisttl)
+    await fetch(filecnlisttl, {cache: "no-store"})
         .then(response => {
             //console.log("Imported Chinese list");
             return response.json();
